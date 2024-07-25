@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:quiz_app/quiz_brain.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'dart:async'; // Import this for Timer
+import 'package:circular_countdown_timer/circular_countdown_timer.dart'; // Add this line
 
 QuizBrain Qbrain = QuizBrain();
 
@@ -65,8 +66,7 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   List<Icon> scorekeeper = [];
-  int _remainingTime = 10;
-  Timer? _timer;
+  final CountDownController _controller = CountDownController();
   bool _isAlertShown = false;
   int score = 0;
 
@@ -77,20 +77,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _startTimer() {
-    _remainingTime = 10;
-    _timer?.cancel();
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_remainingTime == 0) {
-        _timer?.cancel();
-        if (!_isAlertShown) {
-          _showTimeUpAlert();
-        }
-      } else {
-        setState(() {
-          _remainingTime--;
-        });
-      }
-    });
+    _controller.restart(duration: 10);
   }
 
   void _showTimeUpAlert() {
@@ -124,15 +111,17 @@ class _QuizPageState extends State<QuizPage> {
     bool correctAns = Qbrain.getCorrectAns();
     setState(() {
       if (Qbrain.isFinished() == true) {
-        _timer?.cancel();
+        _controller.pause();
         if (!_isAlertShown) {
           int totalQuestions = Qbrain.getTotalQuestions();
           int totalScore = score;
           String message;
           if (totalScore >= 10) {
-            message = 'Congratulations! Your score is $totalScore out of $totalQuestions:)';
+            message =
+            'Congratulations! Your score is $totalScore out of $totalQuestions:)';
           } else {
-            message = 'Keep trying! Your score is $totalScore out of $totalQuestions';
+            message =
+            'Keep trying! Your score is $totalScore out of $totalQuestions';
           }
           Alert(
             context: context,
@@ -200,20 +189,35 @@ class _QuizPageState extends State<QuizPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Time Remaining: $_remainingTime s',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.red,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black38,
-                            blurRadius: 2,
-                            offset: Offset(2, 2),
-                          ),
-                        ],
-                      ),
+                    CircularCountDownTimer(
+                      // Countdown duration in Seconds.
+                      duration: 10,
+
+                       initialDuration: 0,
+                      controller: _controller,
+                      width: MediaQuery.of(context).size.width / 8,
+                      height: MediaQuery.of(context).size.height / 8,
+                      ringColor: Colors.grey[300]!,
+                      ringGradient: null,
+                      fillColor: Colors.red!,
+                      fillGradient: null,
+                      backgroundColor: Colors.green[900],
+                      backgroundGradient: null,
+                      strokeWidth: 7.0,
+                      strokeCap: StrokeCap.round,
+                      textStyle: TextStyle(
+                          fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+                      textFormat: CountdownTextFormat.S,
+                      isReverse: true,
+
+                       isReverseAnimation: false,
+
+                       isTimerTextShown: true,
+
+                       autoStart: true,
+                      onComplete: () {
+                        _showTimeUpAlert();
+                      },
                     ),
                     Text(
                       'Score: $score',
@@ -268,7 +272,8 @@ class _QuizPageState extends State<QuizPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                     child: Text(
                       'True',
@@ -302,7 +307,8 @@ class _QuizPageState extends State<QuizPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding:
+                      EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                     child: Text(
                       'False',
@@ -338,7 +344,6 @@ class _QuizPageState extends State<QuizPage> {
 
   @override
   void dispose() {
-    _timer?.cancel();
     super.dispose();
   }
 }
